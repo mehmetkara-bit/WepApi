@@ -1,5 +1,8 @@
 var builder = WebApplication.CreateBuilder(args);
 
+// "Sistemde tek bir tane HavaDurumuMotoru olsun ve herkes onu kullansın" diyoruz.
+builder.Services.AddSingleton<HavaDurumuMotoru>();
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -33,14 +36,11 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
-// Bizim yeni eklediğimiz "Özel Tahmin" kapısı
-app.MapGet("/tahmin", () =>
+// Buraya dikkat: Parametre olarak (HavaDurumuMotoru motor) ekledik!
+app.MapGet("/tahmin", (HavaDurumuMotoru motor) =>
 {
-    // Kendi yazdığın static metodu burada çağırıyoruz
-    var sonuc = HavaDurumuMotoru.RastgeleHavaDurumuGetir();
-    
-    // API bu sonucu otomatik olarak JSON formatına çevirip tarayıcıya basar
-    return new { Mesaj = "Bugün beklenen hava durumu", Durum = sonuc };
+    var sonuc = motor.RastgeleHavaDurumuGetir();
+    return new { Mesaj = "Hizmetten gelen tahmin", Durum = sonuc };
 });
 
 app.Run();
