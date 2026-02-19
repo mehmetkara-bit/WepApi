@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "rEAVBnymp+I=",
+  "dgSpecHash": "ORyO+S80TJ8=",
   "success": true,
   "projectFilePath": "C:\\Users\\Alfa\\WebApi\\WebApi\\WebApi.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Alfa\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.3\\microsoft.aspnetcore.openapi.10.0.3.nupkg.sha512",
-    "C:\\Users\\Alfa\\.nuget\\packages\\microsoft.openapi\\2.0.0\\microsoft.openapi.2.0.0.nupkg.sha512"
+    "C:\\Users\\Alfa\\.nuget\\packages\\microsoft.openapi\\2.0.0\\microsoft.openapi.2.0.0.nupkg.sha512",
+    "C:\\Users\\Alfa\\.nuget\\packages\\scalar.aspnetcore\\2.12.45\\scalar.aspnetcore.2.12.45.nupkg.sha512"
   ],
   "logs": []
 }
