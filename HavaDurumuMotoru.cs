@@ -1,22 +1,24 @@
 public class HavaDurumuMotoru
 {
-    // Array yerine List kullanıyoruz ki Add() diyebilelim
-    private List<string> summaries = new List<string>
+    // Veriler artık burada bir Liste (List) olarak tutuluyor
+    private List<string> _summaries = new()
     {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild"
+        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
 
     public string RastgeleHavaDurumuGetir()
     {
-        return summaries[Random.Shared.Next(summaries.Count)];
+        return _summaries[Random.Shared.Next(_summaries.Count)];
     }
 
-    // YENİ: Dışarıdan yeni bir özet ekleme metodu
     public void OzetEkle(string yeniOzet)
     {
-        summaries.Add(yeniOzet);
+        if (!_summaries.Contains(yeniOzet)) // Aynı veri varsa ekleme dedik
+        {
+            _summaries.Add(yeniOzet);
+        }
     }
 
-    // Mevcut listeyi görmek için
-    public List<string> TumunuGetir() => summaries;
+    // Bu metod, /weatherforecast için lazım olacak
+    public string[] TumunuGetir() => _summaries.ToArray();
 }

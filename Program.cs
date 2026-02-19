@@ -1,15 +1,11 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// "Sistemde tek bir tane HavaDurumuMotoru olsun ve herkes onu kullansın" diyoruz.
+// Hizmeti sisteme kaydediyoruz
 builder.Services.AddSingleton<HavaDurumuMotoru>();
-
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -17,44 +13,38 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+// 1. Standart Liste (Motoru enjekte ettik)
+app.MapGet("/weatherforecast", (HavaDurumuMotoru motor) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
+    var mevcutOzetler = motor.TumunuGetir();
+    var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
             Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
+            mevcutOzetler[Random.Shared.Next(mevcutOzetler.Length)]
         ))
         .ToArray();
     return forecast;
 })
 .WithName("GetWeatherForecast");
 
-// Buraya dikkat: Parametre olarak (HavaDurumuMotoru motor) ekledik!
+// 2. Tekli Tahmin
 app.MapGet("/tahmin", (HavaDurumuMotoru motor) =>
 {
-    var sonuc = motor.RastgeleHavaDurumuGetir();
-    return new { Mesaj = "Hizmetten gelen tahmin", Durum = sonuc };
+    return new { Mesaj = "Hizmetten gelen tahmin", Durum = motor.RastgeleHavaDurumuGetir() };
 });
 
-// POST: Dışarıdan veri gönderirken MapPost kullanılır
+// 3. Yeni Durum Ekleme (POST)
+// Not: Tarayıcıdan test edeceksen 'yeniDurum' bilgisini URL'nin sonuna eklemelisin: 
+// Örn: /api/summaries?yeniDurum=Mükemmel
 app.MapPost("/api/summaries", (string yeniDurum, HavaDurumuMotoru motor) => 
 {
     if (string.IsNullOrWhiteSpace(yeniDurum))
-    {
-        return Results.BadRequest("Hava durumu boş olamaz!");
-    }
+        return Results.BadRequest("Hata: Boş veri gönderilemez.");
 
     motor.OzetEkle(yeniDurum);
-
-    // 201 Created: "İstediğin şeyi başarıyla oluşturdum" demek
-    return Results.Created($"/api/summaries", $"Yeni durum eklendi: {yeniDurum}");
+    return Results.Created($"/api/summaries", $"Eklendi: {yeniDurum}");
 });
 
 app.Run();
