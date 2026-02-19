@@ -43,6 +43,20 @@ app.MapGet("/tahmin", (HavaDurumuMotoru motor) =>
     return new { Mesaj = "Hizmetten gelen tahmin", Durum = sonuc };
 });
 
+// POST: Dışarıdan veri gönderirken MapPost kullanılır
+app.MapPost("/api/summaries", (string yeniDurum, HavaDurumuMotoru motor) => 
+{
+    if (string.IsNullOrWhiteSpace(yeniDurum))
+    {
+        return Results.BadRequest("Hava durumu boş olamaz!");
+    }
+
+    motor.OzetEkle(yeniDurum);
+
+    // 201 Created: "İstediğin şeyi başarıyla oluşturdum" demek
+    return Results.Created($"/api/summaries", $"Yeni durum eklendi: {yeniDurum}");
+});
+
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
