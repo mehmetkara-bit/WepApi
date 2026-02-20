@@ -67,6 +67,26 @@ app.MapDelete("/api/summaries", (string silinecekDurum, HavaDurumuMotoru motor) 
         return Results.NotFound($"Hata: '{silinecekDurum}' listede bulunamadı.");
     }
 });
+
+// 5. Durum Güncelleme (PUT)
+app.MapPut("/api/summaries", (string eskiAd, string yeniAd, HavaDurumuMotoru motor) => 
+{
+    // Veri geçerlilik kontrolü
+    if (string.IsNullOrWhiteSpace(yeniAd))
+        return Results.BadRequest("Hata: Yeni isim boş olamaz.");
+
+    // Güncelleme işlemini başlat
+    bool sonuc = motor.OzetGuncelle(eskiAd, yeniAd);
+
+    if (sonuc)
+    {
+        return Results.Ok($"'{eskiAd}' başarıyla '{yeniAd}' olarak güncellendi.");
+    }
+    else
+    {
+        return Results.NotFound($"Hata: '{eskiAd}' listede bulunamadı veya '{yeniAd}' zaten listede var.");
+    }
+});
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
