@@ -150,25 +150,37 @@ app.MapDelete("/api/summaries", async (string silinecekDurum, HavaDurumuContext 
     return Results.Ok($"'{silinecekDurum}' veritabanından kalıcı olarak silindi.");
 });
 
-// 5. Durum Güncelleme (PUT)
-app.MapPut("/api/summaries", (string eskiAd, string yeniAd, HavaDurumuMotoru motor) => 
+// 5. Durum Güncelleme (PUT) - Veritabanı Versiyonu
+app.MapPut("/api/summaries", async (string eskiAd, string yeniAd, HavaDurumuContext db) => 
 {
-    // Veri geçerlilik kontrolü
+    // 1. Validasyon: Yeni isim boş mu?
     if (string.IsNullOrWhiteSpace(yeniAd))
         return Results.BadRequest("Hata: Yeni isim boş olamaz.");
 
-    // Güncelleme işlemini başlat
-    bool sonuc = motor.OzetGuncelle(eskiAd, yeniAd);
+    // 2. Veritabanında eski kaydı bul
+    var mevcutKayit = await db.Ozetler.FirstOrDefaultAsync(o => o.Tanim == eskiAd);
 
-    if (sonuc)
+    if (mevcutKayit == null)
     {
-        return Results.Ok($"'{eskiAd}' başarıyla '{yeniAd}' olarak güncellendi.");
+        return Results.NotFound($"Hata: '{eskiAd}' veritabanında bulunamadı.");
     }
-    else
+
+    // 3. Çakışma Kontrolü: Yeni isim zaten veritabanında var mı?
+    var varMi = await db.Ozetler.AnyAsync(o => o.Tanim == yeniAd);
+    if (varMi)
     {
-        return Results.NotFound($"Hata: '{eskiAd}' listede bulunamadı veya '{yeniAd}' zaten listede var.");
+        return Results.Conflict($"Hata: '{yeniAd}' zaten veritabanında mevcut.");
     }
+
+    // 4. Güncelleme işlemini yap
+    mevcutKayit.Tanim = yeniAd;
+    
+    // 5. Değişiklikleri diske kaydet
+    await db.SaveChangesAsync();
+
+    return Results.Ok($"'{eskiAd}' başarıyla '{yeniAd}' olarak güncellendi.");
 });
+
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
