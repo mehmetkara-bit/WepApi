@@ -80,10 +80,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// 1. Standart Liste (Motoru enjekte ettik)
-app.MapGet("/weatherforecast", (HavaDurumuMotoru motor) =>
+app.MapGet("/weatherforecast", async (HavaDurumuContext db) =>
 {
-    var mevcutOzetler = motor.TumunuGetir();
+    // Veritabanındaki tüm özet tanımlarını dizi olarak alıyoruz
+    var mevcutOzetler = await db.Ozetler.Select(o => o.Tanim).ToArrayAsync();
+    
     var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
@@ -96,10 +97,13 @@ app.MapGet("/weatherforecast", (HavaDurumuMotoru motor) =>
 })
 .WithName("GetWeatherForecast");
 
-// 2. Tekli Tahmin
-app.MapGet("/tahmin", (HavaDurumuMotoru motor) =>
+app.MapGet("/tahmin", async (HavaDurumuContext db) =>
 {
-    return new { Mesaj = "Hizmetten gelen tahmin", Durum = motor.RastgeleHavaDurumuGetir() };
+    var tumu = await db.Ozetler.ToListAsync();
+    if (!tumu.Any()) return Results.NotFound("Veritabanında hiç hava durumu tanımı yok.");
+
+    var rastgele = tumu[Random.Shared.Next(tumu.Count)];
+    return Results.Ok(new { Mesaj = "Veritabanından gelen tahmin", Durum = rastgele.Tanim });
 });
 
 //yeni map post metodu
@@ -129,22 +133,21 @@ app.MapPost("/api/summaries", (string yeniDurum, HavaDurumuMotoru motor) =>
     return Results.Created($"/api/summaries", $"Eklendi: {yeniDurum}");
 }); */
 
-// 4. Durum Silme (DELETE)
-app.MapDelete("/api/summaries", (string silinecekDurum, HavaDurumuMotoru motor) => 
+app.MapDelete("/api/summaries", async (string silinecekDurum, HavaDurumuContext db) => 
 {
-    // Motor içindeki silme metodunu çağırıyoruz
-    bool sonuc = motor.OzetSil(silinecekDurum);
+    // Veritabanında bu metne sahip ilk kaydı bul
+    var kayit = await db.Ozetler.FirstOrDefaultAsync(o => o.Tanim == silinecekDurum);
 
-    if (sonuc)
+    if (kayit == null)
     {
-        // Öğe bulundu ve silindiyse 200 OK döner
-        return Results.Ok($"'{silinecekDurum}' listeden başarıyla silindi.");
+        return Results.NotFound($"Hata: '{silinecekDurum}' veritabanında bulunamadı.");
     }
-    else
-    {
-        // Öğe listede yoksa 404 Not Found döner
-        return Results.NotFound($"Hata: '{silinecekDurum}' listede bulunamadı.");
-    }
+
+    // Kaydı silme kuyruğuna ekle ve değişiklikleri kaydet
+    db.Ozetler.Remove(kayit);
+    await db.SaveChangesAsync();
+
+    return Results.Ok($"'{silinecekDurum}' veritabanından kalıcı olarak silindi.");
 });
 
 // 5. Durum Güncelleme (PUT)
