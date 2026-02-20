@@ -1,6 +1,16 @@
-using Scalar.AspNetCore;
+/*using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Hizmeti sisteme kaydediyoruz
+builder.Services.AddSingleton<HavaDurumuMotoru>();
+// Veritabanı dosyasının adını belirliyoruz
+var connectionString = "Data Source=hava.db";
+// Veritabanı servisini kaydediyoruz
+builder.Services.AddSqlite<HavaDurumuContext>(connectionString);
+
+var app = builder.Build();
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<HavaDurumuContext>();
@@ -18,21 +28,54 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Hizmeti sisteme kaydediyoruz
-builder.Services.AddSingleton<HavaDurumuMotoru>();
-// Veritabanı dosyasının adını belirliyoruz
-var connectionString = "Data Source=hava.db";
-// Veritabanı servisini kaydediyoruz
-builder.Services.AddSqlite<HavaDurumuContext>(connectionString);
-
 builder.Services.AddOpenApi();
-
-var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference(); // İŞTE BU YENİ: Scalar arayüzünü açar
+}
+
+app.UseHttpsRedirection();
+
+*/
+
+using Scalar.AspNetCore;
+using Microsoft.EntityFrameworkCore; // Bunu eklemeyi unutma
+
+var builder = WebApplication.CreateBuilder(args);
+
+// --- 1. SERVİS KAYITLARI (builder.Build'dan ÖNCE OLMALI) ---
+builder.Services.AddSingleton<HavaDurumuMotoru>();
+builder.Services.AddOpenApi(); // Bu satır yukarı taşındı!
+
+var connectionString = "Data Source=hava.db";
+builder.Services.AddSqlite<HavaDurumuContext>(connectionString);
+
+// --- 2. UYGULAMANIN İNŞA EDİLMESİ ---
+var app = builder.Build();
+
+// --- 3. VERİTABANI OLUŞTURMA VE MIDDLEWARE (app.Build'dan SONRA OLMALI) ---
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<HavaDurumuContext>();
+    db.Database.EnsureCreated();
+
+    if (!db.Ozetler.Any())
+    {
+        db.Ozetler.AddRange(
+            new HavaDurumuTablosu { Tanim = "Chilly" },
+            new HavaDurumuTablosu { Tanim = "Warm" },
+            new HavaDurumuTablosu { Tanim = "Hot" }
+        );
+        db.SaveChanges();
+    }
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
