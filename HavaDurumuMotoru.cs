@@ -19,6 +19,12 @@ public class HavaDurumuMotoru
         }
     }
 
+    public bool OzetSil(string silinecekOzet)
+{
+    // List.Remove metodu eğer öğeyi bulup silerse 'true', bulamazsa 'false' döner.
+    return _summaries.Remove(silinecekOzet);
+}
+
     // Bu metod, /weatherforecast için lazım olacak
     public string[] TumunuGetir() => _summaries.ToArray();
 }

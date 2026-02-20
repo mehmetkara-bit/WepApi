@@ -50,6 +50,23 @@ app.MapPost("/api/summaries", (string yeniDurum, HavaDurumuMotoru motor) =>
     return Results.Created($"/api/summaries", $"Eklendi: {yeniDurum}");
 });
 
+// 4. Durum Silme (DELETE)
+app.MapDelete("/api/summaries", (string silinecekDurum, HavaDurumuMotoru motor) => 
+{
+    // Motor içindeki silme metodunu çağırıyoruz
+    bool sonuc = motor.OzetSil(silinecekDurum);
+
+    if (sonuc)
+    {
+        // Öğe bulundu ve silindiyse 200 OK döner
+        return Results.Ok($"'{silinecekDurum}' listeden başarıyla silindi.");
+    }
+    else
+    {
+        // Öğe listede yoksa 404 Not Found döner
+        return Results.NotFound($"Hata: '{silinecekDurum}' listede bulunamadı.");
+    }
+});
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
