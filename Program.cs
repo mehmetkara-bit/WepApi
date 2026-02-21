@@ -1,45 +1,3 @@
-/*using Scalar.AspNetCore;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Hizmeti sisteme kaydediyoruz
-builder.Services.AddSingleton<HavaDurumuMotoru>();
-// Veritabanı dosyasının adını belirliyoruz
-var connectionString = "Data Source=hava.db";
-// Veritabanı servisini kaydediyoruz
-builder.Services.AddSqlite<HavaDurumuContext>(connectionString);
-
-var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<HavaDurumuContext>();
-    db.Database.EnsureCreated(); // Eğer dosya yoksa oluşturur
-
-    // Eğer veritabanı boşsa başlangıç verilerini ekleyelim
-    if (!db.Ozetler.Any())
-    {
-        db.Ozetler.AddRange(
-            new HavaDurumuTablosu { Tanim = "Chilly" },
-            new HavaDurumuTablosu { Tanim = "Warm" },
-            new HavaDurumuTablosu { Tanim = "Hot" }
-        );
-        db.SaveChanges();
-    }
-}
-
-builder.Services.AddOpenApi();
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference(); // İŞTE BU YENİ: Scalar arayüzünü açar
-}
-
-app.UseHttpsRedirection();
-
-*/
-
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore; // Bunu eklemeyi unutma
 
@@ -121,17 +79,6 @@ app.MapPost("/api/summaries", async (string yeniDurum, HavaDurumuContext db) =>
 
     return Results.Created($"/api/summaries", $"Veritabanına eklendi: {yeniDurum}");
 });
-/*// 3. Yeni Durum Ekleme (POST)
-// Not: Tarayıcıdan test edeceksen 'yeniDurum' bilgisini URL'nin sonuna eklemelisin: 
-// Örn: /api/summaries?yeniDurum=Mükemmel
-app.MapPost("/api/summaries", (string yeniDurum, HavaDurumuMotoru motor) => 
-{
-    if (string.IsNullOrWhiteSpace(yeniDurum))
-        return Results.BadRequest("Hata: Boş veri gönderilemez.");
-
-    motor.OzetEkle(yeniDurum);
-    return Results.Created($"/api/summaries", $"Eklendi: {yeniDurum}");
-}); */
 
 app.MapDelete("/api/summaries", async (string silinecekDurum, HavaDurumuContext db) => 
 {
